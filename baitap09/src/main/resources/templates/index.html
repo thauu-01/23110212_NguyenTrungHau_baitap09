@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>GraphQL with AJAX</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Products Sorted by Price</h1>
+    <div id="products-sorted"></div>
+
+    <h1>Products by Category</h1>
+    <input type="number" id="categoryId" placeholder="Enter Category ID">
+    <button id="fetchByCategory">Fetch</button>
+    <div id="products-by-category"></div>
+
+    <!-- Example CRUD Form for User (tương tự cho Product/Category) -->
+    <h1>Create User</h1>
+    <form id="createUserForm">
+        <input type="text" id="fullname" placeholder="Fullname">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <input type="text" id="phone" placeholder="Phone">
+        <button type="button" id="createUser">Create</button>
+    </form>
+
+    <script>
+        // Hàm chung gọi GraphQL
+        function callGraphQL(query, variables = {}) {
+            return $.ajax({
+                url: '/graphql',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ query, variables }),
+            }).then(response => {
+                if (response.errors) {
+                    console.error(response.errors);
+                    throw new Error('GraphQL Error');
+                }
+                return response.data;
+            });
+        }
+
+        // Render products sorted by price
+        $(document).ready(function() {
+            const query = `
+                query {
+                    allProductsSortedByPrice {
+                        id
+                        title
+                        price
+                    }
+                }
+            `;
+            callGraphQL(query).then(data => {
+                let html = '<ul>';
+                data.allProductsSortedByPrice.forEach(product => {
+                    html += `<li>${product.title} - Price: ${product.price}</li>`;
+                });
+                html += '</ul>';
+                $('#products-sorted').html(html);
+            });
+        });
+
+        // Render products by category
+        $('#fetchByCategory').click(function() {
+            const categoryId = $('#categoryId').val();
+            const query = `
+                query($categoryId: ID!) {
+                    productsByCategory(categoryId: $categoryId) {
+                        id
+                        title
+                        price
+                    }
+                }
+            `;
+            callGraphQL(query, { categoryId }).then(data => {
+                let html = '<ul>';
+                data.productsByCategory.forEach(product => {
+                    html += `<li>${product.title} - Price: ${product.price}</li>`;
+                });
+                html += '</ul>';
+                $('#products-by-category').html(html);
+            });
+        });
+
+        // Example: Create User
+        $('#createUser').click(function() {
+            const input = {
+                fullname: $('#fullname').val(),
+                email: $('#email').val(),
+                password: $('#password').val(),
+                phone: $('#phone').val()
+                // categoryIds: [] if needed
+            };
+            const mutation = `
+                mutation($input: UserInput) {
+                    createUser(input: $input) {
+                        id
+                        fullname
+                    }
+                }
+            `;
+            callGraphQL(mutation, { input }).then(data => {
+                alert('User created: ' + data.createUser.fullname);
+            });
+        });
+
+        // Tương tự thêm code cho update/delete/other CRUD using forms/buttons.
+    </script>
+</body>
+</html>
