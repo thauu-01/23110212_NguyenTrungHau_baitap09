@@ -1,28 +1,37 @@
+# ========================= QUERY =========================
 type Query {
-    allProductsSortedByPrice: [Product!]!
-    productsByCategory(categoryId: ID!): [Product!]!
-
+    # Product Queries
+    allProducts: [Product!]!                    
+    allProductsSortedByPrice: [Product!]!       
+    productsByCategory(categoryId: ID!): [Product!]! 
+    # User Queries
     allUsers: [User!]!
     userById(id: ID!): User
 
+    # Category Queries
     allCategories: [Category!]!
     categoryById(id: ID!): Category
 }
 
+# ========================= MUTATION =========================
 type Mutation {
+    # User CRUD
     createUser(input: UserInput!): User!
     updateUser(id: ID!, input: UserInput!): User!
     deleteUser(id: ID!): Boolean!
 
+    # Product CRUD
     createProduct(input: ProductInput!): Product!
     updateProduct(id: ID!, input: ProductInput!): Product!
     deleteProduct(id: ID!): Boolean!
 
+    # Category CRUD
     createCategory(input: CategoryInput!): Category!
     updateCategory(id: ID!, input: CategoryInput!): Category!
     deleteCategory(id: ID!): Boolean!
 }
 
+# ========================= OBJECT TYPES =========================
 type User {
     id: ID!
     fullname: String!
@@ -51,6 +60,7 @@ type Product {
     categories: [Category!]!
 }
 
+# ========================= INPUT TYPES =========================
 input UserInput {
     fullname: String!
     email: String!
