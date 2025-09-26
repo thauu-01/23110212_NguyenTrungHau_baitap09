@@ -11,9 +11,12 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-@Controller // Spring GraphQL dùng @Controller thay vì @Component
+@Controller
 public class QueryResolver {
 
     @Autowired
@@ -26,20 +29,46 @@ public class QueryResolver {
     private UserRepository userRepository;
 
     // ================== PRODUCT ==================
+
+    // Lấy tất cả sản phẩm (không sắp xếp)
     @QueryMapping
-    public List<ProductEntity> allProductsSortedByPrice() {
-        return productRepository.findAllByOrderByPriceAsc();
+    public List<ProductEntity> allProducts() {
+        List<ProductEntity> products = productRepository.findAll();
+        // Đảm bảo không trả về null và không có phần tử null
+        return products == null ? new ArrayList<>() :
+                products.stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
     }
 
+    // Lấy tất cả sản phẩm sắp xếp theo giá tăng dần
+    @QueryMapping
+    public List<ProductEntity> allProductsSortedByPrice() {
+        List<ProductEntity> products = productRepository.findAllByOrderByPriceAsc();
+        return products == null ? new ArrayList<>() :
+                products.stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+    }
+
+    // Lấy tất cả sản phẩm theo Category ID
     @QueryMapping
     public List<ProductEntity> productsByCategory(@Argument Long categoryId) {
-        return productRepository.findByCategoriesId(categoryId);
+        List<ProductEntity> products = productRepository.findByCategories_Id(categoryId);
+        return products == null ? new ArrayList<>() :
+                products.stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
     }
 
     // ================== USER ==================
     @QueryMapping
     public List<UserEntity> allUsers() {
-        return userRepository.findAll();
+        List<UserEntity> users = userRepository.findAll();
+        return users == null ? new ArrayList<>() :
+                users.stream()
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
     }
 
     @QueryMapping
@@ -50,7 +79,11 @@ public class QueryResolver {
     // ================== CATEGORY ==================
     @QueryMapping
     public List<CategoryEntity> allCategories() {
-        return categoryRepository.findAll();
+        List<CategoryEntity> categories = categoryRepository.findAll();
+        return categories == null ? new ArrayList<>() :
+                categories.stream()
+                          .filter(Objects::nonNull)
+                          .collect(Collectors.toList());
     }
 
     @QueryMapping
