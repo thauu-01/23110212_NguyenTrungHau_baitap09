@@ -1,111 +1,403 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>GraphQL with AJAX</title>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <meta charset="UTF-8">
+  <title>GraphQL CRUD - User / Product / Category</title>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    h2 { margin-top: 25px; color: #444; }
+    .section { border: 1px solid #ccc; padding: 15px; margin: 20px 0; border-radius: 8px; }
+    input, button {
+      padding: 6px;
+      margin: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    ul { list-style: none; padding: 0; }
+    li { background: #f9f9f9; margin: 3px 0; padding: 8px; border-radius: 4px; }
+    button { cursor: pointer; }
+    button:hover { background: #e6e6e6; }
+    .divider { height: 2px; background: #ccc; margin: 20px 0; }
+  </style>
 </head>
 <body>
-    <h1>Products Sorted by Price</h1>
-    <div id="products-sorted"></div>
+  <h1>GraphQL CRUD Management</h1>
 
-    <h1>Products by Category</h1>
-    <input type="number" id="categoryId" placeholder="Enter Category ID">
+  <!-- ================== PRODUCTS SORTED ================== -->
+  <div class="section">
+    <h2>Products Sorted by Price</h2>
+    <button id="fetchSortedProducts">Fetch Products Sorted</button>
+    <div id="products-sorted"></div>
+  </div>
+
+  <!-- ================== PRODUCTS BY CATEGORY ================== -->
+  <div class="section">
+    <h2>Products by Category</h2>
+    <input type="number" id="categoryIdFilter" placeholder="Enter Category ID">
     <button id="fetchByCategory">Fetch</button>
     <div id="products-by-category"></div>
+  </div>
 
-    <!-- Example CRUD Form for User (tương tự cho Product/Category) -->
-    <h1>Create User</h1>
-    <form id="createUserForm">
-        <input type="text" id="fullname" placeholder="Fullname">
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <input type="text" id="phone" placeholder="Phone">
-        <button type="button" id="createUser">Create</button>
-    </form>
+  <div class="divider"></div>
 
-    <script>
-        // Hàm chung gọi GraphQL
-        function callGraphQL(query, variables = {}) {
-            return $.ajax({
-                url: '/graphql',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ query, variables }),
-            }).then(response => {
-                if (response.errors) {
-                    console.error(response.errors);
-                    throw new Error('GraphQL Error');
-                }
-                return response.data;
-            });
+  <!-- ================== USER CRUD ================== -->
+  <div class="section">
+    <h2>User CRUD</h2>
+    <h3>Create User</h3>
+    <input type="text" id="userFullname" placeholder="Fullname">
+    <input type="email" id="userEmail" placeholder="Email">
+    <input type="password" id="userPassword" placeholder="Password">
+    <input type="text" id="userPhone" placeholder="Phone">
+    <button id="createUser">Create</button>
+
+    <h3>Update User</h3>
+    <input type="number" id="updateUserId" placeholder="User ID">
+    <input type="text" id="updateUserFullname" placeholder="Fullname">
+    <input type="email" id="updateUserEmail" placeholder="Email">
+    <input type="password" id="updateUserPassword" placeholder="Password">
+    <input type="text" id="updateUserPhone" placeholder="Phone">
+    <button id="updateUser">Update</button>
+
+    <h3>Delete User</h3>
+    <input type="number" id="deleteUserId" placeholder="User ID">
+    <button id="deleteUser">Delete</button>
+
+    <h3>List Users</h3>
+    <button id="fetchUsers">Fetch All Users</button>
+    <div id="users-list"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ================== CATEGORY CRUD ================== -->
+  <div class="section">
+    <h2>Category CRUD</h2>
+    <h3>Create Category</h3>
+    <input type="text" id="categoryName" placeholder="Category Name">
+    <button id="createCategory">Create</button>
+
+    <h3>Update Category</h3>
+    <input type="number" id="updateCategoryId" placeholder="Category ID">
+    <input type="text" id="updateCategoryName" placeholder="New Category Name">
+    <button id="updateCategory">Update</button>
+
+    <h3>Delete Category</h3>
+    <input type="number" id="deleteCategoryId" placeholder="Category ID">
+    <button id="deleteCategory">Delete</button>
+
+    <h3>List Categories</h3>
+    <button id="fetchCategories">Fetch All Categories</button>
+    <div id="categories-list"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ================== PRODUCT CRUD ================== -->
+  <div class="section">
+    <h2>Product CRUD</h2>
+
+    <h3>Create Product</h3>
+    <input type="text" id="productTitle" placeholder="Title">
+    <input type="number" id="productQuantity" placeholder="Quantity">
+    <input type="text" id="productDesc" placeholder="Description">
+    <input type="number" step="0.01" id="productPrice" placeholder="Price">
+    <input type="number" id="productUserId" placeholder="User ID">
+    <input type="text" id="productCategoryIds" placeholder="Category IDs (comma-separated)">
+    <button id="createProduct">Create</button>
+
+    <h3>Update Product</h3>
+    <input type="number" id="updateProductId" placeholder="Product ID">
+    <input type="text" id="updateProductTitle" placeholder="Title">
+    <input type="number" id="updateProductQuantity" placeholder="Quantity">
+    <input type="text" id="updateProductDesc" placeholder="Description">
+    <input type="number" step="0.01" id="updateProductPrice" placeholder="Price">
+    <input type="number" id="updateProductUserId" placeholder="User ID">
+    <input type="text" id="updateProductCategoryIds" placeholder="Category IDs (comma-separated)">
+    <button id="updateProduct">Update</button>
+
+    <h3>Delete Product</h3>
+    <input type="number" id="deleteProductId" placeholder="Product ID">
+    <button id="deleteProduct">Delete</button>
+
+    <h3>List Products</h3>
+    <button id="fetchProducts">Fetch All Products</button>
+    <div id="products-list"></div>
+  </div>
+
+  <script>
+    // ================== COMMON GRAPHQL FUNCTION ==================
+    function callGraphQL(query, variables = {}) {
+      return $.ajax({
+        url: '/graphql',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ query, variables }),
+      }).then(response => {
+        if (response.errors) {
+          console.error(response.errors);
+          alert('GraphQL Error: ' + response.errors[0].message);
+          throw new Error('GraphQL Error');
         }
+        return response.data;
+      });
+    }
 
-        // Render products sorted by price
-        $(document).ready(function() {
-            const query = `
-                query {
-                    allProductsSortedByPrice {
-                        id
-                        title
-                        price
-                    }
-                }
-            `;
-            callGraphQL(query).then(data => {
-                let html = '<ul>';
-                data.allProductsSortedByPrice.forEach(product => {
-                    html += `<li>${product.title} - Price: ${product.price}</li>`;
-                });
-                html += '</ul>';
-                $('#products-sorted').html(html);
-            });
+    // ================== USER CRUD ==================
+    $('#createUser').click(function () {
+      const input = {
+        fullname: $('#userFullname').val(),
+        email: $('#userEmail').val(),
+        password: $('#userPassword').val(),
+        phone: $('#userPhone').val()
+      };
+      const mutation = `
+        mutation($input: UserInput!) {
+          createUser(input: $input) {
+            id fullname email
+          }
+        }
+      `;
+      callGraphQL(mutation, { input }).then(data => {
+        alert('User created: ' + data.createUser.fullname);
+      });
+    });
+
+    $('#updateUser').click(function () {
+      const id = parseInt($('#updateUserId').val());
+      const input = {
+        fullname: $('#updateUserFullname').val(),
+        email: $('#updateUserEmail').val(),
+        password: $('#updateUserPassword').val(),
+        phone: $('#updateUserPhone').val()
+      };
+      const mutation = `
+        mutation($id: ID!, $input: UserInput!) {
+          updateUser(id: $id, input: $input) {
+            id fullname
+          }
+        }
+      `;
+      callGraphQL(mutation, { id, input }).then(data => {
+        alert('User updated: ' + data.updateUser.fullname);
+      });
+    });
+
+    $('#deleteUser').click(function () {
+      const id = parseInt($('#deleteUserId').val());
+      const mutation = `
+        mutation($id: ID!) {
+          deleteUser(id: $id)
+        }
+      `;
+      callGraphQL(mutation, { id }).then(data => {
+        alert(data.deleteUser ? 'User deleted successfully.' : 'Delete failed.');
+      });
+    });
+
+    $('#fetchUsers').click(function () {
+      const query = `
+        query {
+          allUsers {
+            id fullname email phone
+          }
+        }
+      `;
+      callGraphQL(query).then(data => {
+        let html = '<ul>';
+        data.allUsers.forEach(u => {
+          html += `<li>ID: ${u.id} | ${u.fullname} | ${u.email} | ${u.phone}</li>`;
         });
+        html += '</ul>';
+        $('#users-list').html(html);
+      });
+    });
 
-        // Render products by category
-        $('#fetchByCategory').click(function() {
-            const categoryId = $('#categoryId').val();
-            const query = `
-                query($categoryId: ID!) {
-                    productsByCategory(categoryId: $categoryId) {
-                        id
-                        title
-                        price
-                    }
-                }
-            `;
-            callGraphQL(query, { categoryId }).then(data => {
-                let html = '<ul>';
-                data.productsByCategory.forEach(product => {
-                    html += `<li>${product.title} - Price: ${product.price}</li>`;
-                });
-                html += '</ul>';
-                $('#products-by-category').html(html);
-            });
+    // ================== CATEGORY CRUD ==================
+    $('#createCategory').click(function () {
+      const input = { name: $('#categoryName').val() };
+      const mutation = `
+        mutation($input: CategoryInput!) {
+          createCategory(input: $input) {
+            id name
+          }
+        }
+      `;
+      callGraphQL(mutation, { input }).then(data => {
+        alert('Category created: ' + data.createCategory.name);
+      });
+    });
+
+    $('#updateCategory').click(function () {
+      const id = parseInt($('#updateCategoryId').val());
+      const input = { name: $('#updateCategoryName').val() };
+      const mutation = `
+        mutation($id: ID!, $input: CategoryInput!) {
+          updateCategory(id: $id, input: $input) {
+            id name
+          }
+        }
+      `;
+      callGraphQL(mutation, { id, input }).then(data => {
+        alert('Category updated: ' + data.updateCategory.name);
+      });
+    });
+
+    $('#deleteCategory').click(function () {
+      const id = parseInt($('#deleteCategoryId').val());
+      const mutation = `
+        mutation($id: ID!) {
+          deleteCategory(id: $id)
+        }
+      `;
+      callGraphQL(mutation, { id }).then(data => {
+        alert(data.deleteCategory ? 'Category deleted successfully.' : 'Delete failed.');
+      });
+    });
+
+    $('#fetchCategories').click(function () {
+      const query = `
+        query {
+          allCategories {
+            id name
+          }
+        }
+      `;
+      callGraphQL(query).then(data => {
+        let html = '<ul>';
+        data.allCategories.forEach(c => {
+          html += `<li>ID: ${c.id} | ${c.name}</li>`;
         });
+        html += '</ul>';
+        $('#categories-list').html(html);
+      });
+    });
 
-        // Example: Create User
-        $('#createUser').click(function() {
-            const input = {
-                fullname: $('#fullname').val(),
-                email: $('#email').val(),
-                password: $('#password').val(),
-                phone: $('#phone').val()
-                // categoryIds: [] if needed
-            };
-            const mutation = `
-                mutation($input: UserInput) {
-                    createUser(input: $input) {
-                        id
-                        fullname
-                    }
-                }
-            `;
-            callGraphQL(mutation, { input }).then(data => {
-                alert('User created: ' + data.createUser.fullname);
-            });
+    // ================== PRODUCT CRUD ==================
+    $('#createProduct').click(function () {
+      const categoryIds = $('#productCategoryIds').val()
+        ? $('#productCategoryIds').val().split(',').map(id => parseInt(id.trim())) : [];
+      const input = {
+        title: $('#productTitle').val(),
+        quantity: parseInt($('#productQuantity').val()),
+        desc: $('#productDesc').val(),
+        price: parseFloat($('#productPrice').val()),
+        userid: parseInt($('#productUserId').val()),
+        categoryIds: categoryIds
+      };
+      const mutation = `
+        mutation($input: ProductInput!) {
+          createProduct(input: $input) {
+            id title price
+          }
+        }
+      `;
+      callGraphQL(mutation, { input }).then(data => {
+        alert('Product created: ' + data.createProduct.title);
+      });
+    });
+
+    $('#updateProduct').click(function () {
+      const categoryIds = $('#updateProductCategoryIds').val()
+        ? $('#updateProductCategoryIds').val().split(',').map(id => parseInt(id.trim())) : [];
+      const id = parseInt($('#updateProductId').val());
+      const input = {
+        title: $('#updateProductTitle').val(),
+        quantity: parseInt($('#updateProductQuantity').val()),
+        desc: $('#updateProductDesc').val(),
+        price: parseFloat($('#updateProductPrice').val()),
+        userid: parseInt($('#updateProductUserId').val()),
+        categoryIds: categoryIds
+      };
+      const mutation = `
+        mutation($id: ID!, $input: ProductInput!) {
+          updateProduct(id: $id, input: $input) {
+            id title price
+          }
+        }
+      `;
+      callGraphQL(mutation, { id, input }).then(data => {
+        alert('Product updated: ' + data.updateProduct.title);
+      });
+    });
+
+    $('#deleteProduct').click(function () {
+      const id = parseInt($('#deleteProductId').val());
+      const mutation = `
+        mutation($id: ID!) {
+          deleteProduct(id: $id)
+        }
+      `;
+      callGraphQL(mutation, { id }).then(data => {
+        alert(data.deleteProduct ? 'Product deleted successfully.' : 'Delete failed.');
+      });
+    });
+
+    $('#fetchProducts').click(function () {
+      const query = `
+        query {
+          allProducts {
+            id title price
+            user { fullname }
+            categories { name }
+          }
+        }
+      `;
+      callGraphQL(query).then(data => {
+        let html = '<ul>';
+        data.allProducts.forEach(p => {
+          html += `<li>ID: ${p.id} | ${p.title} | Price: ${p.price} 
+            | User: ${p.user ? p.user.fullname : 'N/A'} 
+            | Categories: ${p.categories.map(c => c.name).join(', ')}</li>`;
         });
+        html += '</ul>';
+        $('#products-list').html(html);
+      });
+    });
 
-        // Tương tự thêm code cho update/delete/other CRUD using forms/buttons.
-    </script>
+    // ================== PRODUCTS BY CATEGORY ==================
+    $('#fetchByCategory').click(function () {
+      const categoryId = parseInt($('#categoryIdFilter').val());
+      const query = `
+        query($categoryId: ID!) {
+          productsByCategory(categoryId: $categoryId) {
+            id title price
+          }
+        }
+      `;
+      callGraphQL(query, { categoryId }).then(data => {
+        let html = '<ul>';
+        if (data.productsByCategory.length === 0) {
+          html = '<p>No products found for this category.</p>';
+        } else {
+          data.productsByCategory.forEach(p => {
+            html += `<li>${p.title} - $${p.price}</li>`;
+          });
+        }
+        html += '</ul>';
+        $('#products-by-category').html(html);
+      });
+    });
+
+    // ================== PRODUCTS SORTED BY PRICE ==================
+    $('#fetchSortedProducts').click(function () {
+      const query = `
+        query {
+          allProductsSortedByPrice {
+            id title price
+          }
+        }
+      `;
+      callGraphQL(query).then(data => {
+        let html = '<ul>';
+        data.allProductsSortedByPrice.forEach(p => {
+          html += `<li>${p.title} - $${p.price}</li>`;
+        });
+        html += '</ul>';
+        $('#products-sorted').html(html);
+      });
+    });
+  </script>
 </body>
 </html>
